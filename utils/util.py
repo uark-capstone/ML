@@ -1,16 +1,23 @@
+import io
+import glob
+import base64
 from PIL import Image
 from math import sqrt, ceil
-import glob
-from io import BytesIO
 
+def stringToImage(input_string):
+    # see base64.txt for working encoding
+    img_only = input_string[input_string.find(b'/9'):] # gets image part of encoding
+    b = io.BytesIO(base64.b64decode(img_only))
+    img = Image.open(b)
 
-def stringToImage(stringImage):
-    return( Image.open(BytesIO.base64.b64decode(stringImage)))
+    in_mem_file = io.BytesIO()
+    img.save(in_mem_file, format=img.format)
+    in_mem_file.seek(0)
 
+    return in_mem_file
 
 
 #Place images in stack
-
 def concat(images, outPut):
     if images:
         increment = 0
@@ -26,6 +33,3 @@ def concat(images, outPut):
                 x = 0;
                 y += each.width
         return(output);
-
-
-    
