@@ -19,8 +19,8 @@ api = Api(app)
 class Rekognition(Resource):
     def post(self):
         json_data = request.get_json(force=True)
-        user_id = json_data['user_id']
-        lecture_id = json_data['lecture_id']
+        user_id = json_data['userId']
+        lecture_id = json_data['lectureId']
         timestamp = json_data['timestamp']
         base_64_string = json_data['base64String']
 
