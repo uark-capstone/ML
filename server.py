@@ -1,6 +1,7 @@
 #region Imports
 import os
 import json
+from requests.models import Response
 import werkzeug
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api, reqparse
@@ -52,5 +53,13 @@ class Rekognition(Resource):
 api.add_resource(Rekognition, '/rekognition-queue')
 #endregion
 
+#region Misc
+class Ping(Resource):
+    def get(self):
+        return "Pong"
+
+api.add_resource(Ping, '/ping')
+#endregion
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0')
