@@ -10,6 +10,7 @@ def addEmotion(emotion_entry):
     print(emotion_entry)
     url = BACKEND_URL + 'emotion/addEmotion'
 
+    print(url)
     response = requests.post(url, json = emotion_entry)
 
     if response.status_code != 200:
