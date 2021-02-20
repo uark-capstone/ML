@@ -56,7 +56,7 @@ api.add_resource(Rekognition, '/rekognition-queue')
 #region Misc
 class Ping(Resource):
     def get(self):
-        return "Pong"
+        return backend.BACKEND_URL
 
 api.add_resource(Ping, '/ping')
 #endregion
