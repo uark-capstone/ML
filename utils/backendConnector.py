@@ -1,7 +1,10 @@
+import os
 import requests
 
-BACKEND_URL = 'http://0.0.0.0:8080/'
+LIVE_URL = os.getenv('BACKEND_URL')
+BACKEND_URL = ('http://0.0.0.0:8080/', LIVE_URL)[LIVE_URL != None]
 
+print('Backend url: ' + BACKEND_URL)
 
 def addEmotion(emotion_entry):
     print(emotion_entry)
