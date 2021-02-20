@@ -53,16 +53,11 @@ class RekognitionQueue(Resource):
 api.add_resource(RekognitionQueue, '/rekognition-queue')
 
 class Rekognition(Resource):
-    def post(self):
-        json_data = request.get_json(force=True)
-        photo_name = json_data['photoName']
-
+    def get(self, photo_name):
         result = rek.detect_faces(photo_name)
-
         return result
 
-
-api.add_resource(Rekognition, '/rekognition')
+api.add_resource(Rekognition, '/rekognition', '/rekognition/<string:photo_name>')
 #endregion
 
 #region Misc
