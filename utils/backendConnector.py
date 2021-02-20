@@ -13,4 +13,5 @@ def addEmotion(emotion_entry):
     response = requests.post(url, json = emotion_entry)
 
     if response.status_code != 200:
+        print(response)
         print('Failed to add emotion to DB')
