@@ -17,7 +17,7 @@ app = Flask(__name__)
 api = Api(app)
 
 #region AWS
-class Rekognition(Resource):
+class RekognitionQueue(Resource):
     def post(self):
         json_data = request.get_json(force=True)
         user_id = json_data['userId']
@@ -50,7 +50,19 @@ class Rekognition(Resource):
 
         return result
 
-api.add_resource(Rekognition, '/rekognition-queue')
+api.add_resource(RekognitionQueue, '/rekognition-queue')
+
+class Rekognition(Resource):
+    def post(self):
+        json_data = request.get_json(force=True)
+        photo_name = json_data['photoName']
+
+        result = rek.detect_faces(photo_name)
+
+        return result
+
+
+api.add_resource(Rekognition, '/rekognition')
 #endregion
 
 #region Misc
