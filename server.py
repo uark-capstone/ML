@@ -16,6 +16,7 @@ from utils import backendConnector as backend
 app = Flask(__name__)
 api = Api(app)
 
+
 #region AWS
 class RekognitionQueue(Resource):
     def post(self):
@@ -46,27 +47,34 @@ class RekognitionQueue(Resource):
                     backend.addEmotion(emotion_entry)
 
         else:
-            result = json.dumps({'error': 'failed to upload/process file'})        
+            result = json.dumps({'error': 'failed to upload/process file'})       
+            bucket.delete_from_bucket(saved_file_name)
 
         return result
 
+
 api.add_resource(RekognitionQueue, '/rekognition-queue')
+
 
 class Rekognition(Resource):
     def get(self, photo_name):
         result = rek.detect_faces(photo_name)
         return result
 
+
 api.add_resource(Rekognition, '/rekognition', '/rekognition/<string:photo_name>')
 #endregion
+
 
 #region Misc
 class Ping(Resource):
     def get(self):
         return backend.BACKEND_URL
 
+
 api.add_resource(Ping, '/ping')
 #endregion
+
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
