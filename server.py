@@ -46,9 +46,9 @@ class RekognitionQueue(Resource):
 
                     backend.addEmotion(emotion_entry)
 
+            bucket.delete_from_bucket(saved_file_name)
         else:
             result = json.dumps({'error': 'failed to upload/process file'})       
-            bucket.delete_from_bucket(saved_file_name)
 
         return result
 
