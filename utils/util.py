@@ -18,7 +18,7 @@ def stringToImage(input_string):
 
 
 #Place images in stack
-def concat(images, outPut):
+def concat(images):
     if images:
         increment = 0
         stepsize = ceil(sqrt(len(images)))

@@ -1,6 +1,10 @@
 #region Imports
 import os
+import io
 import json
+import datetime
+from PIL import Image
+
 from requests.models import Response
 from flask import Flask, request
 from flask_restful import Resource, Api
@@ -22,39 +26,76 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 #region AWS
+queue = []
+
+def process_queue():
+    global queue
+
+    cleaned_queue = [q[1] for q in queue]
+
+    tiled_image = util.concat(cleaned_queue)
+    in_mem_file = io.BytesIO()
+    tiled_image.save(in_mem_file, format='png')
+    in_mem_file.seek(0)
+
+    saved_file_name = bucket.upload_to_bucket(in_mem_file)
+
+    if (saved_file_name):
+        results, emotion_arrays = process_and_get_emotion_arrays(saved_file_name)
+        bucket.delete_from_bucket(saved_file_name)
+
+        file_path = './prediction_data/user-ryan.json'
+
+        input_data, output_data = predict.load_data(file_path)
+        model = predict.train_model(input_data, output_data)
+
+        for i, emotion_array in enumerate(emotion_arrays):
+            data_to_test = []
+            data_to_test.append(emotion_array)
+
+            prediction = model.predict(data_to_test)
+            print(prediction)        
+
+            emotion_entry = queue[i][0]
+            emotion_entry['emotions'] = prediction[0]
+            emotion_entry['percent'] = 100
+
+        queue = []
+    else:
+        results = json.dumps({'error': 'failed to upload/process file'})       
+
+    return results
+
+
 class RekognitionQueue(Resource):
     def post(self):
+        global queue
         json_data = request.get_json(force=True)
         user_id = json_data['userId']
         lecture_id = json_data['lectureId']
-        timestamp = json_data['timestamp']
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         base_64_string = json_data['base64String']
 
         # see base64.txt for working encoding
         image = util.stringToImage(bytes(base_64_string, 'utf-8'))
+        image = Image.open(image)
 
-        saved_file_name = bucket.upload_to_bucket(image)
+        user_data = {
+            'lecture_id': lecture_id,
+            'user_id': user_id,
+            'timestamp': timestamp
+        }
 
-        if (saved_file_name):
-            result = rek.detect_faces(saved_file_name)
-
-            emotions = result[0]['Emotions']
-            for emotion in emotions:
-                if emotion['Confidence'] > 1:
-                    emotion_entry = {
-                        'lecture_id': lecture_id,
-                        'user_id': user_id,
-                        'emotions': emotion['Type'],
-                        'percent': emotion['Confidence']
-                    }
-
-                    backend.addEmotion(emotion_entry)
-
-            bucket.delete_from_bucket(saved_file_name)
+        if len(queue) < 8:
+            queue.append((user_data, image))
+            return json.dumps({'success': 'Added item to queue {}'.format(len(queue))})    
+        elif len(queue) == 8:
+            queue.append((user_data, image))
+            return process_queue()
         else:
-            result = json.dumps({'error': 'failed to upload/process file'})       
+            queue = []
+            return json.dumps({'error': 'queue bigger than 9'})    
 
-        return result
 
 
 api.add_resource(RekognitionQueue, '/rekognition-queue')
@@ -168,6 +209,25 @@ def process_and_get_emotion_array(base_64_string):
         return result, emotion_values
 
     return None, None
+
+def process_and_get_emotion_arrays(saved_file_name):
+    results = rek.detect_faces(saved_file_name)
+    emotion_values = []
+
+    for i, result in enumerate(results):
+        emotions = result['Emotions']
+        sorted_emotions = sorted(emotions, key=lambda x: x['Type'])
+
+        proper_order = ['ANGRY', 'CALM', 'CONFUSED', 'DISGUSTED', 'FEAR', 'HAPPY', 'SAD', 'SURPRISED']
+
+        local_emotion_values = []
+        for i, emotion in enumerate(sorted_emotions):
+            if emotion['Type'] == proper_order[i]:
+                local_emotion_values.append(emotion['Confidence'])
+
+        emotion_values.append(local_emotion_values)
+        
+    return results, emotion_values
 #endregion
 
 
