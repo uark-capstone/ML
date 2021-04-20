@@ -56,7 +56,7 @@ def process_queue():
             prediction = model.predict(data_to_test)
             print(prediction)        
 
-            emotion_entry = str(queue[i][0])
+            emotion_entry = queue[i][0]
             emotion_entry['emotions'] = prediction[0]
             emotion_entry['percent'] = 100
 
