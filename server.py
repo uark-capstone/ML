@@ -57,7 +57,10 @@ def process_queue():
             print(prediction)        
 
             emotion_entry = queue[i][0]
-            emotion_entry['emotions'] = int(prediction[0])
+
+            values = ["Not listening", "Neutral", "Actively Listening"]
+
+            emotion_entry['emotions'] = values[int(prediction[0])]
             emotion_entry['percent'] = 100
 
             backend.addEmotion(emotion_entry)
